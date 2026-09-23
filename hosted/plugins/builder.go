@@ -12,12 +12,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/gravwell/gravwell/v3/hosted"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/jamf"
+	"github.com/gravwell/gravwell/v3/hosted/plugins/microsoft"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/mimecast"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/msgraph"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/okta"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/sqs"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/tester"
 	"github.com/gravwell/gravwell/v3/hosted/plugins/wiz"
+	"github.com/gravwell/gravwell/v3/ingest/processors"
 )
 
 type BuilderConfig interface {
@@ -195,4 +197,8 @@ func NewSQSBuilder(config *sqs.Config, kind, id, version string) *SQSBuilder {
 			version: version,
 		},
 	}
+}
+
+func NewMicrosoftBuilder(name string, cfg *microsoft.Config, pp processors.ProcessorConfig) IngesterBuilder {
+	return microsoft.NewBuilder(name, cfg, pp)
 }

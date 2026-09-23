@@ -1,0 +1,77 @@
+diff --git a/hosted/plugins/config.go b/hosted/plugins/config.go
+--- a/hosted/plugins/config.go
++++ b/hosted/plugins/config.go
+@@ -19,6 +19,7 @@ import (
+ 
+ 	// include all the native hosted ingesters
+ 	"github.com/gravwell/gravwell/v3/hosted/plugins/jamf"
++	"github.com/gravwell/gravwell/v3/hosted/plugins/microsoft"
+ 	"github.com/gravwell/gravwell/v3/hosted/plugins/mimecast"
+ 	"github.com/gravwell/gravwell/v3/hosted/plugins/msgraph"
+ 	"github.com/gravwell/gravwell/v3/hosted/plugins/okta"
+@@ -27,12 +28,13 @@ import (
+ )
+ 
+ type Configs struct {
+-	Okta     map[string]*okta.Config
+-	Mimecast map[string]*mimecast.Config
+-	MSGraph  map[string]*msgraph.Config
+-	Tester   map[string]*tester.Config
+-	Jamf     map[string]*jamf.Config
+-	Wiz      map[string]*wiz.Config
++	Okta      map[string]*okta.Config
++	Mimecast  map[string]*mimecast.Config
++	MSGraph   map[string]*msgraph.Config
++	Tester    map[string]*tester.Config
++	Jamf      map[string]*jamf.Config
++	Microsoft map[string]*microsoft.Config
++	Wiz       map[string]*wiz.Config
+ }
+ 
+ // Verify ensures that the plugin configs are valid
+@@ -87,6 +89,14 @@ func (c Configs) Verify() (err error) {
+ 			return
+ 		}
+ 	}
++	for k, v := range c.Microsoft {
++		if v == nil {
++			return fmt.Errorf("Microsoft config %q is nil", k)
++		}
++		if err = v.Verify(); err != nil {
++			return fmt.Errorf("Microsoft config %q failed validation: %w", k, err)
++		}
++	}
+ 	for k, v := range c.Wiz {
+ 		if v == nil {
+ 			err = fmt.Errorf("Wiz config %q is nil", k)
+@@ -114,6 +124,9 @@ func (c Configs) Tags() (tags []string, err error) {
+ 	for _, v := range c.Jamf {
+ 		tags = append(tags, v.Tags()...)
+ 	}
++	for _, v := range c.Microsoft {
++		tags = append(tags, v.Tags()...)
++	}
+ 	for _, v := range c.Wiz {
+ 		tags = append(tags, v.Tags()...)
+ 	}
+@@ -125,7 +138,7 @@ func (c Configs) Tags() (tags []string, err error) {
+ 
+ // IngesterCount returns the number of ingesters configured
+ func (c Configs) IngesterCount() (count int) {
+-	count += len(c.Okta) + len(c.Tester) + len(c.Mimecast) + len(c.Jamf) + len(c.Wiz) + len(c.MSGraph)
++	count += len(c.Okta) + len(c.Tester) + len(c.Mimecast) + len(c.Jamf) + len(c.Microsoft) + len(c.Wiz) + len(c.MSGraph)
+ 	return
+ }
+ 
+@@ -163,6 +176,11 @@ func (c Configs) Builders() iter.Seq2[string, IngesterBuilder] {
+ 				return
+ 			}
+ 		}
++		for name, config := range c.Microsoft {
++			if !yield(name, microsoft.NewBuilder(name, config)) {
++				return
++			}
++		}
+ 		for name, config := range c.Wiz {
+ 			if !yield(name, NewWizBuilder(config, wiz.Name, wiz.ID, wiz.Version)) {
+ 				return
