@@ -1,6 +1,6 @@
 # Microsoft API Hosted Runner
 
-This private plugin consolidates stable, read-only Microsoft pull APIs into one
+This plugin consolidates stable, read-only Microsoft pull APIs into one
 Gravwell Hosted Runner process. Production deployment uses one named
 `Microsoft` stanza per exact `Api` selector. Stanzas may reference the same
 tenant, application, and `Client-Secret-File`, but each has an independent
@@ -8,7 +8,7 @@ UUID, poll lifecycle, state key, permission result, and completion log. A
 blocked product API therefore cannot turn the multi-selector deployment into one
 all-or-none polling unit.
 
-The production command is `cmd/gravwell_hosted_runner`; Microsoft is registered
+The production command is `hosted/runner`; Microsoft is registered
 as one native Hosted Runner plugin in that command. It is not a Gravwell
 Fetcher. Its default configuration and
 overlay locations are:
@@ -404,19 +404,24 @@ acceptable when deliberately enabled and labeled during validation.
 
 ## Validation
 
+Run these commands from the repository root with the Go version specified in
+`go.mod`. The formatting check should print no paths. The build produces a
+`hosted-runner` executable in the current directory.
+
 ```bash
-gofmt -w plugins/microsoft cmd/gravwell_hosted_runner
-go test ./plugins/microsoft ./cmd/gravwell_hosted_runner
-go vet ./plugins/microsoft ./cmd/gravwell_hosted_runner
-go build ./cmd/gravwell_hosted_runner
-docker build -f Dockerfile.hosted .
+gofmt -l hosted/plugins/microsoft hosted/plugins/builder.go hosted/plugins/config.go
+go test -tags upstream_registration ./hosted/... -count=1
+go test ./hosted/... -count=1
+go test -race -tags upstream_registration ./hosted/... -count=1
+go vet -tags upstream_registration ./hosted/...
+go build -trimpath -o hosted-runner ./hosted/runner
 ```
 
 The Hosted Runner builds for macOS amd64/arm64 and Linux amd64. Windows is not
 currently supported because the pinned Gravwell Hosted Runner Bolt storage
 implementation directly uses Unix `syscall.Flock`.
 
-The production plugin is registered in `cmd/gravwell_hosted_runner`. A site
+Microsoft is registered by `hosted/plugins` and included in `hosted/runner`. A site
 that needs a Microsoft-only lifecycle deploys that binary with a configuration
 containing only `[Microsoft "name"]` stanzas and separate cache/state/log
 mounts. There is no second, divergent Microsoft Hosted Runner source tree.
