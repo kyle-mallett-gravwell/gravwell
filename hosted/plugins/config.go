@@ -180,7 +180,7 @@ type IngesterBuilder interface {
 func (c Configs) Builders() iter.Seq2[string, IngesterBuilder] {
 	return func(yield func(string, IngesterBuilder) bool) {
 		for name, cfg := range c.ServiceNow {
-			if !yield(name, NewServiceNowBuilder(name, cfg, c.Preprocessor)) {
+			if !yield(name, servicenow.NewBuilder(name, cfg, c.Preprocessor)) {
 				return
 			}
 		}
